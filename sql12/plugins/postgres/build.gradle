@@ -1,0 +1,5 @@
+//additional configurations for the subproject
+
+dependencies {
+    implementation fileTree(dir: 'lib', include: '*.jar')
+}

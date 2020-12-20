@@ -1,0 +1,30 @@
+//additional configurations for the subproject
+
+processResources {
+    filesMatching('net/sourceforge/squirrel_sql/client/Version.properties') {
+        filter { line ->
+            line.replace('squirrelsql.version.value', rootProject.version)
+        }
+        filteringCharset = java.nio.charset.StandardCharsets.UTF_8
+    }
+}
+
+jar {
+    archiveBaseName = 'squirrel-sql'
+
+    from ('../launcher') {
+        include 'icons/splash.jpg'
+    }
+    includeEmptyDirs = false
+
+    manifest {
+        attributes(
+            'Main-Class': 'net.sourceforge.squirrel_sql.client.Main',
+            'Class-Path': configurations.runtimeClasspath.collect { 'lib/' + it.name }.join(' '),
+            'SplashScreen-Image': 'icons/splash.jpg',
+            'Built-By': System.getProperty('user.name'),
+            'Created-By': System.getProperty('java.runtime.version') + ' (' + System.getProperty('java.vendor') + ')',
+            'Gradle-Version': 'Gradle ' + gradle.getGradleVersion(),
+        )
+    }
+}

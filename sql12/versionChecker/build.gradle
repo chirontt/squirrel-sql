@@ -1,0 +1,10 @@
+//additional configurations for the subproject
+
+java {
+    sourceCompatibility = JavaVersion.toVersion(rootProject.versionCheckerTargetVM)
+    targetCompatibility = JavaVersion.toVersion(rootProject.versionCheckerTargetVM)
+}
+
+jar {
+    archiveBaseName = 'versioncheck'
+}

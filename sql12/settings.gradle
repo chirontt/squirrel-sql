@@ -1,0 +1,52 @@
+rootProject.name = 'squirrel-sql'
+
+include 'core'
+include 'versionChecker'
+
+gradle.ext.allPlugins = [
+    'codecompletion',
+    'dataimport',
+    'db2',
+    'dbcopy',
+    'dbdiff',
+    'derby',
+    'example',
+    'exportconfig',
+    'favs',
+    'firebird',
+    'graph',
+    'greenplum',
+    'h2',
+    'hibernate',
+    'i18n',
+    'informix',
+    'laf',
+    'mssql',
+    'multisource',
+    'mysql',
+    'netezza',
+    'oracle',
+    'postgres',
+    'refactoring',
+    'sessionscript',
+    'smarttools',
+    'sqlbookmark',
+    'sqlparam',
+    'sqlreplace',
+    'sqlscript',
+    'sqlval',
+    'swingViolations',
+    'sybase',
+    'syntax',
+    'vertica',
+    'wikiTableConfigurations',
+]
+
+gradle.ext.allPlugins.each { dirName ->
+    include "$dirName"
+    project(":$dirName").projectDir = file("plugins/$dirName")
+}
+
+include 'macosx'
+project(':macosx').projectDir = file('plugins/macosx')
+

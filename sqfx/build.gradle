@@ -1,0 +1,202 @@
+plugins {
+	id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.9'
+}
+
+wrapper {
+    gradleVersion = '6.7.1'
+    distributionType = Wrapper.DistributionType.ALL
+}
+
+group = 'squirrel-sql'
+
+def currDate = new Date()
+def DSTAMP = currDate.format('yyyyMMdd')
+def TSTAMP = currDate.format('HHmm')
+
+//DEFINE VERSION HERE ONLY
+//version = '0.'  //release version
+version = "snapshot-${DSTAMP}_${TSTAMP}"
+
+defaultTasks 'buildAll'
+
+ext {
+    mainClassName = 'org.squirrelsql.Main'
+    //moduleName = 'squirrelsqlfx' //same module name in module-info.java (if defined)
+
+    //3rd-party libraries in core/lib, for the compile classpath
+    coreLibClasspath = fileTree(dir: 'core/lib', include: '*.jar', exclude: 'versioncheck.jar')
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+compileJava {
+    options.release = 9  //use JDK9+ for compiling & running
+    options.encoding = 'UTF-8'
+}
+
+javafx {
+    version = '15.0.1'
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.swing']
+}
+
+dependencies {
+    implementation coreLibClasspath
+    //plus the JavaFX libraries added by the javafx plugin.
+}
+
+application {
+    //mainModule = moduleName
+    mainClass = project.mainClassName
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['core/src']
+        }
+        resources {
+            //initialize the srcDirs property to remove the default src/main/resources,
+            //and add other resources from core/src (excluding *.java by default)
+            srcDirs = ['core/src']
+        }
+    }
+}
+
+processResources {
+    filesMatching('org/squirrelsql/splash/Version.properties') {
+        filter { line ->
+            line.replace('squirrelsql.version.value', version)
+        }
+        filteringCharset = java.nio.charset.StandardCharsets.UTF_8
+    }
+}
+
+jar {
+    archiveFileName = 'squirrel-sql-fx.jar'
+
+    manifest {
+        attributes(
+            'Main-Class': project.mainClassName,
+            'Class-Path': coreLibClasspath.collect { 'lib/' + it.name }.join(' '),
+            'Built-By': System.getProperty('user.name'),
+            'Created-By': System.getProperty('java.runtime.version') + ' (' + System.getProperty('java.vendor') + ')',
+            'Gradle-Version': 'Gradle ' + gradle.getGradleVersion(),
+        )
+    }
+}
+
+run {
+    //args '--p=<propertiesFilePath>'
+
+    debugOptions {
+        enabled = true
+        port = 5566
+        server = true
+        suspend = false
+    }
+}
+
+//custom tasks for creating zip distributions
+def createZipDistribution(distType) {
+    def distTypes = ['portable', 'currentOS']
+    if (!distTypes.contains(distType)) {
+        throw new GradleException("Wrong distribution type: ${distType}. Valid distribution types are: $distTypes")
+    }
+
+    def osString = distType=='portable' ? 'portable' : javafx.platform.classifier
+
+    return tasks.create("createPlainZip${osString}Task", Zip) {
+        destinationDirectory = file("$buildDir/plainZip")
+
+        def internalFolder = "squirrelsqlfx-$project.version-$osString"
+        archiveFileName = internalFolder + '.zip'
+
+        into internalFolder
+
+        from (jar)
+
+        if (osString == 'portable') {
+            //to be portable, external JavaFX SDK's lib directory path in the user's system
+            //must be manually set in the launcher scripts by the user before launch
+            //(i.e. the JAVAFX_SDK_LIB environment variable is left empty
+            //as-is in the launcher scripts during the 'portable' zip creation)
+            from ('launcher') {
+                include '**/*'
+            }
+        }
+        else if (osString == 'win') {
+            //Windows JavaFX native libraries are included in the 'lib' folder,
+            //set the JAVAFX_SDK_LIB environment variable to point there
+            from ('launcher') {
+                include '*.bat'
+                filesMatching('squirrel-sql.bat') {
+                    filter { line ->
+                        line.replace('set JAVAFX_SDK_LIB=', 'set JAVAFX_SDK_LIB=lib')
+                    }
+                    filteringCharset = java.nio.charset.StandardCharsets.UTF_8
+                }
+            }
+        }
+        else {
+            //Linux/Mac JavaFX native libraries are included in the 'lib' directory,
+            //set the JAVAFX_SDK_LIB environment variable to point there
+            from ('launcher') {
+                include '*.sh'
+                filesMatching('squirrel-sql.sh') {
+                    filter { line ->
+                        line.replace('JAVAFX_SDK_LIB=', 'JAVAFX_SDK_LIB=lib')
+                    }
+                    filteringCharset = java.nio.charset.StandardCharsets.UTF_8
+                }
+            }
+        }
+
+        from ('core') {
+            include 'doc/**'
+        }
+
+        from ('core/lib') {
+            include 'versioncheck.jar'
+            into 'versioncheck'
+        }
+
+        if (osString == 'portable') {
+            //exclude JavaFX native libraries, to be portable,
+            //from the 'lib' sub-folder
+            from (coreLibClasspath) {
+                into 'lib'
+            }
+        }
+        else {
+            //include JavaFX native libraries (of the current OS running the build)
+            //to the 'lib' sub-folder
+            from (configurations.runtimeClasspath) {
+                into 'lib'
+            }
+        }
+
+        from ('core/src/org/squirrelsql/globalicons') {
+            include 'splash.jpg'
+            into 'icons'
+        }
+    }
+}
+
+task createZipDistributions {
+    dependsOn createZipDistribution('portable'),
+              createZipDistribution('currentOS')
+}
+
+task runApp {
+    //execute the 'application' plugin's run task
+    dependsOn run
+}
+
+task buildAll {
+    dependsOn jar, createZipDistributions
+}

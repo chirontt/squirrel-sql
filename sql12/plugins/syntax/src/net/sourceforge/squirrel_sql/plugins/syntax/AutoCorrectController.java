@@ -125,7 +125,7 @@ public class AutoCorrectController
 
          DefaultTableModel dtm = (DefaultTableModel) _dlg.tblAutoCorrects.getModel();
 
-         Vector<Vector<String>> dataVector = dtm.getDataVector();
+         Vector<Vector> dataVector = dtm.getDataVector();
 
          Vector<String> row = dataVector.get(selRow);
 
@@ -172,7 +172,7 @@ public class AutoCorrectController
 
       DefaultTableModel dtm = (DefaultTableModel) _dlg.tblAutoCorrects.getModel();
 
-      Vector<Vector<String>> dataVector = dtm.getDataVector();
+      Vector<Vector> dataVector = dtm.getDataVector();
 
       boolean found = false;
       for (int i = 0; i < dataVector.size(); i++)
@@ -210,7 +210,7 @@ public class AutoCorrectController
    {
       DefaultTableModel dtm = (DefaultTableModel) _dlg.tblAutoCorrects.getModel();
 
-      Vector<Vector<String>> dataVector = dtm.getDataVector();
+      Vector<Vector> dataVector = dtm.getDataVector();
 
 
       Hashtable<String, String> newAutoCorrects = new Hashtable<>();
