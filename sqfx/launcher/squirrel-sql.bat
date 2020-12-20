@@ -1,5 +1,13 @@
 @echo off
 
+@rem The path to the JavaFX SDK's lib folder in the system
+set JAVAFX_SDK_LIB=
+
+if "%JAVAFX_SDK_LIB%" == "" (
+  echo Please set the path to the JavaFX SDK's lib folder in your system, e.g. C:\javafx-sdk-11.0.2\lib
+  goto ExitForWrongJavaVersion
+)
+
 @rem IZPACK_JAVA is filtered in by the IzPack installer when this script is installed
 set IZPACK_JAVA="%JAVA_HOME%"
 
@@ -29,7 +37,7 @@ set SQUIRREL_SQL_HOME=%basedir%
 @rem that version of higher.  The arguments to JavaVersionChecker below specify the minimum acceptable version 
 @rem (first arg) and any other acceptable subsequent versions.  <MAJOR>.<MINOR> should be all that is 
 @rem necessary for the version form. 
-"%LOCAL_JAVA%" -cp "%SQUIRREL_SQL_HOME%\lib\versioncheck.jar" JavaVersionChecker 9
+"%LOCAL_JAVA%" -cp "%SQUIRREL_SQL_HOME%\versioncheck\versioncheck.jar" JavaVersionChecker 9 10 11 12 13 14 15
 if ErrorLevel 1 goto ExitForWrongJavaVersion
 
 :launchsquirrel
@@ -46,6 +54,6 @@ SET TMP_PARMS=%1 %2 %3 %4 %5 %6 %7 %8 %9
 
 @rem Run with no command window. This may not work with versions of Windows prior to XP. 
 @rem Remove 'start "SQuirreL SQL Client" /B' for compatibility only if necessary 
-start "SQuirreL SQL Client" /B "%LOCAL_JAVA%" -cp %SQUIRREL_CP% org.squirrelsql.Main %TMP_PARMS%
+start "SQuirreL SQL Client" /B "%LOCAL_JAVA%" --module-path %JAVAFX_SDK_LIB% --add-modules javafx.controls,javafx.fxml,javafx.swing -cp %SQUIRREL_CP% org.squirrelsql.Main %TMP_PARMS%
 
 :ExitForWrongJavaVersion

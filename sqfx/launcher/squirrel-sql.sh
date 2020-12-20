@@ -1,5 +1,13 @@
 #! /bin/sh
 
+# The path to the JavaFX SDK's lib directory in the system
+JAVAFX_SDK_LIB=
+
+if [ "$JAVAFX_SDK_LIB" = "" ]; then
+  echo Please set the path to the JavaFX SDK\'s lib directory in your system, e.g. /opt/javafx-sdk-11.0.2/lib
+  exit
+fi
+
 # IZPACK_JAVA_HOME is filtered in by the IzPack installer when this script is installed
 IZPACK_JAVA_HOME=$JAVA_HOME
 
@@ -53,7 +61,7 @@ cd "$UNIX_STYLE_HOME"
 # should be able to be run by that version or higher. The arguments to JavaVersionChecker below specify the 
 # minimum acceptable version (first arg) and any other acceptable subsequent versions.  <MAJOR>.<MINOR> should 
 # be all that is necessary for the version form. 
-$JAVACMD -cp "$UNIX_STYLE_HOME/lib/versioncheck.jar" JavaVersionChecker 9
+$JAVACMD -cp "$UNIX_STYLE_HOME/versioncheck/versioncheck.jar" JavaVersionChecker 9 10 11 12 13 14 15
 if [ "$?" = "1" ]; then
   exit
 fi
@@ -79,4 +87,4 @@ fi
 SCRIPT_ARGS="$1 $2 $3 $4 $5 $6 $7 $8 $9"
 
 # Launch SQuirreL application
-$JAVACMD -cp "$TMP_CP" org.squirrelsql.Main  "$UNIX_STYLE_HOME" $SCRIPT_ARGS
+$JAVACMD --module-path $JAVAFX_SDK_LIB --add-modules javafx.controls,javafx.fxml,javafx.swing -cp "$TMP_CP" org.squirrelsql.Main  "$UNIX_STYLE_HOME" $SCRIPT_ARGS

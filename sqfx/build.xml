@@ -1,5 +1,9 @@
 <project name="SQuirreLSQLFX" default="buildAll" basedir=".">
 
+    <!-- JavaFX SDK directory is needed for compiling -->
+    <property name="javafx.sdk.dir" value="C:/dev/javafx-sdk-15.0.1"/>
+    <!-- use JDK9+ for compiling & running -->
+    <property name="targetVM" value="9"/>
 
     <target name="cleanAllAndInit" description="cleanAllAndInit">
 
@@ -17,25 +21,39 @@
         <mkdir dir="output/plainZip/work"/>
     </target>
 
-
-    <path id="build.classpath">
+    <path id="core.lib.classpath">
         <fileset dir="core/lib">
             <include name="**/*" />
+            <exclude name="versioncheck.jar" />
         </fileset>
     </path>
 
+    <path id="build.classpath">
+        <path refid="core.lib.classpath"/>
+        <fileset dir="${javafx.sdk.dir}/lib">
+            <include name="*.jar" />
+        </fileset>
+    </path>
+
+    <pathconvert property="manifest.classpath" pathsep=" ">
+        <path refid="core.lib.classpath"/>
+        <mapper>
+            <chainedmapper>
+                <flattenmapper/>
+                <globmapper from="*.jar" to="lib/*.jar"/>
+            </chainedmapper>
+        </mapper>
+    </pathconvert>
 
     <target name="buildAll" description="buildAll" depends="cleanAllAndInit">
-
         <antcall target="compileCore"/>
-        <antcall target="createPlainZip"></antcall>
-
+        <antcall target="createPlainZip"/>
     </target>
 
     <target name="createPlainZip" description="createPlainZip">
         <delete dir="output/plainZip/work"/>
 
-        <property name="plainZipName" value="squirrelsqlfx-${squirrelsqlfx.version}"/>
+        <property name="plainZipName" value="squirrelsqlfx-${squirrelsqlfx.version}-portable"/>
 
         <mkdir dir="output/plainZip/work/${plainZipName}"/>
 
@@ -51,7 +69,8 @@
 
 
     <target name="compileCore" description="compileCore">
-        <javac srcdir="core/src" destdir="output/work/bin" classpathref="build.classpath" debug="true"/>
+        <javac source="${targetVM}" target="${targetVM}"
+               srcdir="core/src" destdir="output/work/bin" classpathref="build.classpath" debug="true"/>
         <copy todir="output/work/bin">
             <fileset dir="core/src">
                 <exclude name="**/*.java" />
@@ -60,11 +79,23 @@
 
         <replace file="output/work/bin/org/squirrelsql/splash/Version.properties" token="squirrelsql.version.value" value="${squirrelsqlfx.version}"/>
 
+        <jar jarfile="output/dist/squirrel-sql-fx.jar" basedir="output/work/bin">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Main-Class" value="org.squirrelsql.Main"/>
+                <attribute name="Class-Path" value="${manifest.classpath}"/>
+            </manifest>
+        </jar>
 
-        <jar jarfile="output/dist/squirrel-sql-fx.jar" basedir="output/work/bin"/>
         <copy todir="output/dist/lib">
             <fileset dir="core/lib">
                 <include name="**/*" />
+                <exclude name="versioncheck.jar" />
+            </fileset>
+        </copy>
+        <copy todir="output/dist/versioncheck">
+            <fileset dir="core/lib">
+                <include name="versioncheck.jar" />
             </fileset>
         </copy>
         <copy todir="output/dist/">
@@ -83,5 +114,12 @@
         <zip destfile="output/dist/doc/src.jar" basedir="core/src"/>
     </target>
 
+    <target name="runApp" description="Run SquirrelSQLFX">
+        <java jar="output/dist/squirrel-sql-fx.jar" fork="true" dir="output/dist"
+              modulepath="${javafx.sdk.dir}/lib">
+            <jvmarg value="--add-modules"/>
+            <jvmarg value="ALL-MODULE-PATH"/>
+        </java>
+    </target>
 
 </project> 
