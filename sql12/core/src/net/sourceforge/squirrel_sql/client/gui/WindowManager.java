@@ -28,7 +28,6 @@ import net.sourceforge.squirrel_sql.client.gui.db.AliasesListInternalFrame;
 import net.sourceforge.squirrel_sql.client.gui.db.DriverWindowManager;
 import net.sourceforge.squirrel_sql.client.gui.db.DriversList;
 import net.sourceforge.squirrel_sql.client.gui.db.DriversListInternalFrame;
-import net.sourceforge.squirrel_sql.client.gui.db.IToogleableAliasesList;
 import net.sourceforge.squirrel_sql.client.gui.db.recentalias.RecentAliasesListCtrl;
 import net.sourceforge.squirrel_sql.client.gui.db.recentalias.ViewInAliasesAction;
 import net.sourceforge.squirrel_sql.client.gui.desktopcontainer.DialogWidget;
@@ -51,6 +50,7 @@ import net.sourceforge.squirrel_sql.client.gui.session.SessionInternalFrame;
 import net.sourceforge.squirrel_sql.client.mainframe.action.AliasFileOpenAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.AliasPropertiesAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.CollapseAllAliasFolderAction;
+import net.sourceforge.squirrel_sql.client.mainframe.action.CollapseSelectedAliasFolderAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.ColorAliasAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.ConnectToAliasAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.CopyAliasAction;
@@ -62,6 +62,7 @@ import net.sourceforge.squirrel_sql.client.mainframe.action.CutAliasFolderAction
 import net.sourceforge.squirrel_sql.client.mainframe.action.DeleteAliasAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.DeleteDriverAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.ExpandAllAliasFolderAction;
+import net.sourceforge.squirrel_sql.client.mainframe.action.ExpandSelectedAliasFolderAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.ModifyAliasAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.ModifyDriverAction;
 import net.sourceforge.squirrel_sql.client.mainframe.action.NewAliasFolderAction;
@@ -857,7 +858,7 @@ public class WindowManager
 
 	private AliasesListInternalFrame createAliasesListWindow()
 	{
-		final IToogleableAliasesList al = new AliasesList(_app);
+		final AliasesList al = new AliasesList(_app);
 
 		final ActionCollection actions = _app.getActionCollection();
 		actions.add(new ModifyAliasAction(_app, al));
@@ -878,6 +879,8 @@ public class WindowManager
 		actions.add(new PasteAliasFolderAction(_app, al));
 		actions.add(new CollapseAllAliasFolderAction(_app, al));
 		actions.add(new ExpandAllAliasFolderAction(_app, al));
+		actions.add(new CollapseSelectedAliasFolderAction(_app, al));
+		actions.add(new ExpandSelectedAliasFolderAction(_app, al));
 		actions.add(new TransferAliasAction(al));
 		actions.add(new ViewInAliasesAction());
 

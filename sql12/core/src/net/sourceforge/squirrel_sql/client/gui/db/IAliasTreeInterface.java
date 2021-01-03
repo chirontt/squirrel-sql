@@ -1,5 +1,7 @@
 package net.sourceforge.squirrel_sql.client.gui.db;
 
+import java.util.List;
+
 public interface IAliasTreeInterface
 {
    void createNewFolder();
@@ -13,4 +15,11 @@ public interface IAliasTreeInterface
    void collapseAll();
 
    void expandAll();
+
+   void collapseSelected();
+
+   void expandSelected();
+
+   List<AliasFolder> getAllAliasFolders();
+
 }
