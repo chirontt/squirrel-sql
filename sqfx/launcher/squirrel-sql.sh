@@ -87,4 +87,4 @@ fi
 SCRIPT_ARGS="$1 $2 $3 $4 $5 $6 $7 $8 $9"
 
 # Launch SQuirreL application
-$JAVACMD --module-path $JAVAFX_SDK_LIB --add-modules javafx.controls,javafx.fxml,javafx.swing -cp "$TMP_CP" org.squirrelsql.Main  "$UNIX_STYLE_HOME" $SCRIPT_ARGS
+$JAVACMD --module-path $JAVAFX_SDK_LIB --add-modules javafx.controls,javafx.fxml,javafx.swing -cp "$TMP_CP" %SQUIRREL_SQL_OPTS% org.squirrelsql.Main  "$UNIX_STYLE_HOME" $SCRIPT_ARGS

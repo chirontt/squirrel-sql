@@ -6,6 +6,18 @@ Not yet released, available in our GIT repository and in snapshots and future re
 
 Enhancements:
 
+Merge request #73: Add possibility to inject JVM arguments via SQUIRREL_SQL_OPTS command line environment variable.
+  Thanks to Antoine Levy-Lambert for thr patch.
+
+Find Alias dialog (ctrl alt shift G or F): Alias folders can be included in search.
+  See check box in the upper part of the dialog.
+  Double click on a Alias folder will go to the folder in the Alias tree.
+
+New tool bar / right mouse menu functions in Alias tree: Collapse/Expand selected folder.
+
+New SQL result table right mouse menu item: "Show distinct values..."
+  Shows distinct values of a column and more.
+
 Merge Request #71: Brushed up the UI of SQuirreL's help.
    Thanks to Stanimir Stamenkov for the patch.
 
@@ -106,6 +118,11 @@ Brushed up the Look and feel Plugin;
 
 
 Bug fixes:
+
+Oracle Plugin: Parts (lines) of procedure source code could be missing
+   Reading procedure source code expected a single result line only but multiple are possible.
+
+#1455 Oracle Plugin: Show source code that fails to reformat as it comes from the database.
 
 #1452 Derby-DB: "Create table script" and "Create data script" didn't work for columns of type boolean.
 
