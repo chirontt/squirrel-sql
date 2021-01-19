@@ -6,6 +6,15 @@ Not yet released, available in our GIT repository and in snapshots and future re
 
 Enhancements:
 
+#596 Shortcuts Alt-Y, Alt-N for the following dialogs:
+   Confirm Session closing (Ctrl-Q)
+   Reconnect to database (Ctrl-Alt-T)
+   Unsaved Changes
+
+Option to use the Vertical-blank Sql-formatter (https://github.com/vertical-blank/sql-formatter) instead of SQuirreL's internal formatter.
+  To switch to the Vertical-blank formatter go to menu File --> Global Preference --> tab "SQL formatting".
+  This change was inspired by the discussion in bug #1455.
+
 Merge request #73: Add possibility to inject JVM arguments via SQUIRREL_SQL_OPTS command line environment variable.
   Thanks to Antoine Levy-Lambert for thr patch.
 
@@ -118,6 +127,9 @@ Brushed up the Look and feel Plugin;
 
 
 Bug fixes:
+
+#1456 Oracle Plugin: Broken view source for Oracle user defined functions
+  Note: This fix is related to the one of #172 but not the same.
 
 Oracle Plugin: Parts (lines) of procedure source code could be missing
    Reading procedure source code expected a single result line only but multiple are possible.
