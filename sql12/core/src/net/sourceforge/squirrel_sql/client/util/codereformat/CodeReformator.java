@@ -18,15 +18,14 @@ package net.sourceforge.squirrel_sql.client.util.codereformat;
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+import com.github.vertical_blank.sqlformatter.SqlFormatter;
+import net.sourceforge.squirrel_sql.fw.util.StringManager;
+import net.sourceforge.squirrel_sql.fw.util.StringManagerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import net.sourceforge.squirrel_sql.fw.util.StringManager;
-import net.sourceforge.squirrel_sql.fw.util.StringManagerFactory;
-import net.sourceforge.squirrel_sql.fw.util.log.ILogger;
-import net.sourceforge.squirrel_sql.fw.util.log.LoggerController;
 
 public class CodeReformator implements ICodeReformator
 {
@@ -38,7 +37,6 @@ public class CodeReformator implements ICodeReformator
     */
    private String _lineSep = ICodeReformator.CODE_REFORMATOR_LINE_SEPARATOR;
 
-   private static ILogger s_log = LoggerController.createLogger(CodeReformator.class);
    private CodeReformatorConfig _codeReformatorConfig;
 
 
@@ -47,10 +45,21 @@ public class CodeReformator implements ICodeReformator
       _codeReformatorConfig = codeReformatorConfig;
    }
 
-   /**
-    * @see ICodeReformator#reformat(java.lang.String)
-    */
-   public String reformat(String in)
+
+   @Override
+   public String reformat(String in) throws CodeReformatException
+   {
+      if (_codeReformatorConfig.isUseVerticalBlankFormatter())
+      {
+         return SqlFormatter.format(in, _codeReformatorConfig.getIndent());
+      }
+      else
+      {
+         return squirrelInternalFormatting(in);
+      }
+   }
+
+   private String squirrelInternalFormatting(String in)
    {
       in = flatenWhiteSpaces(in, false);
 
@@ -117,20 +126,19 @@ public class CodeReformator implements ICodeReformator
    }
 
 
-   private void validate(String beforeReformat, String afterReformat)
+   private void validate(String beforeReformat, String afterReformat) throws CodeReformatException
    {
       String normalizedBefore = getNormalized(beforeReformat);
       String normalizedAfter = getNormalized(afterReformat);
 
       if (!normalizedBefore.equalsIgnoreCase(normalizedAfter))
       {
-         int minLen = Math.min(normalizedAfter.length(), normalizedBefore
-               .length());
+         int minLen = Math.min(normalizedAfter.length(), normalizedBefore.length());
+
          StringBuffer diffPos = new StringBuffer();
          for (int i = 0; i < minLen; ++i)
          {
-            if (Character.toUpperCase(normalizedBefore.charAt(i)) != Character
-                  .toUpperCase(normalizedAfter.charAt(i)))
+            if (Character.toUpperCase(normalizedBefore.charAt(i)) != Character.toUpperCase(normalizedAfter.charAt(i)))
             {
                break;
             }
@@ -149,12 +157,7 @@ public class CodeReformator implements ICodeReformator
          msg.append(diffPos.toString());
          msg.append(_lineSep);
 
-         if (s_log.isInfoEnabled())
-         {
-            s_log.info(msg.toString());
-         }
-
-         throw new IllegalStateException(msg.toString());
+         throw new CodeReformatException(msg.toString());
       }
    }
 
