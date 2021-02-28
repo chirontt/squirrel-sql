@@ -1,13 +1,5 @@
 #! /bin/sh
 
-# The path to the JavaFX SDK's lib directory in the system
-JAVAFX_SDK_LIB=
-
-if [ "$JAVAFX_SDK_LIB" = "" ]; then
-  echo Please set the path to the JavaFX SDK\'s lib directory in your system, e.g. /opt/javafx-sdk-11.0.2/lib
-  exit
-fi
-
 # IZPACK_JAVA_HOME is filtered in by the IzPack installer when this script is installed
 IZPACK_JAVA_HOME=$JAVA_HOME
 
@@ -87,4 +79,4 @@ fi
 SCRIPT_ARGS="$1 $2 $3 $4 $5 $6 $7 $8 $9"
 
 # Launch SQuirreL application
-$JAVACMD --module-path $JAVAFX_SDK_LIB --add-modules javafx.controls,javafx.fxml,javafx.swing -cp "$TMP_CP" $SQUIRREL_SQL_OPTS org.squirrelsql.Main  "$UNIX_STYLE_HOME" $SCRIPT_ARGS
+$JAVACMD -cp "$TMP_CP" $SQUIRREL_SQL_OPTS org.squirrelsql.Launcher  "$UNIX_STYLE_HOME" $SCRIPT_ARGS

@@ -1,13 +1,5 @@
 @echo off
 
-@rem The path to the JavaFX SDK's lib folder in the system
-set JAVAFX_SDK_LIB=
-
-if "%JAVAFX_SDK_LIB%" == "" (
-  echo Please set the path to the JavaFX SDK's lib folder in your system, e.g. C:\javafx-sdk-11.0.2\lib
-  goto ExitForWrongJavaVersion
-)
-
 @rem IZPACK_JAVA is filtered in by the IzPack installer when this script is installed
 set IZPACK_JAVA="%JAVA_HOME%"
 
@@ -54,6 +46,6 @@ SET TMP_PARMS=%1 %2 %3 %4 %5 %6 %7 %8 %9
 
 @rem Run with no command window. This may not work with versions of Windows prior to XP. 
 @rem Remove 'start "SQuirreL SQL Client" /B' for compatibility only if necessary 
-start "SQuirreL SQL Client" /B "%LOCAL_JAVA%" --module-path %JAVAFX_SDK_LIB% --add-modules javafx.controls,javafx.fxml,javafx.swing -cp %SQUIRREL_CP% %SQUIRREL_SQL_OPTS% org.squirrelsql.Main %TMP_PARMS%
+start "SQuirreL SQL Client" /B "%LOCAL_JAVA%" -cp %SQUIRREL_CP% %SQUIRREL_SQL_OPTS% org.squirrelsql.Launcher %TMP_PARMS%
 
 :ExitForWrongJavaVersion
