@@ -1,10 +1,10 @@
 plugins {
 	id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.9'
+    id 'org.openjfx.javafxplugin' version '0.0.9'  //requires JDK11+
 }
 
 wrapper {
-    gradleVersion = '6.7.1'
+    gradleVersion = '6.8.3'
     distributionType = Wrapper.DistributionType.ALL
 }
 
@@ -22,35 +22,46 @@ defaultTasks 'buildAll'
 
 ext {
     mainClassName = 'org.squirrelsql.Main'
-    //moduleName = 'squirrelsqlfx' //same module name in module-info.java (if defined)
+    launcherClassName = 'org.squirrelsql.Launcher'
 
     //3rd-party libraries in core/lib, for the compile classpath
     coreLibClasspath = fileTree(dir: 'core/lib', include: '*.jar', exclude: 'versioncheck.jar')
+    javafxVersion = '15.0.1'
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
-    jcenter()
+    mavenLocal()
 }
 
 compileJava {
-    options.release = 9  //use JDK9+ for compiling & running
+    options.release = 11  //use JDK11+ for compiling & running
     options.encoding = 'UTF-8'
 }
 
 javafx {
-    version = '15.0.1'
+    version = javafxVersion
     modules = ['javafx.controls', 'javafx.fxml', 'javafx.swing']
+}
+
+configurations {
+    //define a configuration for all supported OS native libraries of JavaFX
+    allJavaFXnatives
 }
 
 dependencies {
     implementation coreLibClasspath
-    //plus the JavaFX libraries added by the javafx plugin.
+
+    ['linux', 'mac', 'win'].each { classifier ->
+        allJavaFXnatives "org.openjfx:javafx-base:$javafxVersion:$classifier"
+        allJavaFXnatives "org.openjfx:javafx-controls:$javafxVersion:$classifier"
+        allJavaFXnatives "org.openjfx:javafx-fxml:$javafxVersion:$classifier"
+        allJavaFXnatives "org.openjfx:javafx-graphics:$javafxVersion:$classifier"
+        allJavaFXnatives "org.openjfx:javafx-swing:$javafxVersion:$classifier"
+    }
 }
 
 application {
-    //mainModule = moduleName
     mainClass = project.mainClassName
 }
 
@@ -76,17 +87,37 @@ processResources {
     }
 }
 
-jar {
-    archiveFileName = 'squirrel-sql-fx.jar'
+//custom tasks for creating different jar file for different distribution
+def createJarFile(distType) {
+    def distTypes = ['portable', 'currentOS']
+    if (!distTypes.contains(distType)) {
+        throw new GradleException("Wrong distribution type: ${distType}. Valid distribution types are: $distTypes")
+    }
 
-    manifest {
-        attributes(
-            'Main-Class': project.mainClassName,
-            'Class-Path': coreLibClasspath.collect { 'lib/' + it.name }.join(' '),
-            'Built-By': System.getProperty('user.name'),
-            'Created-By': System.getProperty('java.runtime.version') + ' (' + System.getProperty('java.vendor') + ')',
-            'Gradle-Version': 'Gradle ' + gradle.getGradleVersion(),
-        )
+    def osString = distType=='portable' ? 'portable' : javafx.platform.classifier
+
+    return tasks.create("create${osString}JarTask", Jar) {
+        archiveFileName = "squirrel-sql-fx-${osString}.jar"
+
+        def mainClasspath = osString=='portable' ? coreLibClasspath : configurations.runtimeClasspath
+        manifest {
+            attributes(
+                'Main-Class': project.launcherClassName,
+                'Class-Path': mainClasspath.collect { 'lib/' + it.name }.join(' '),
+                'JavaFX-Version': javafxVersion,
+                'Built-By': System.getProperty('user.name'),
+                'Created-By': System.getProperty('java.runtime.version') + ' (' + System.getProperty('java.vendor') + ')',
+                'Gradle-Version': 'Gradle ' + gradle.getGradleVersion(),
+            )
+        }
+
+        from (sourceSets.main.output)
+        if (osString == 'portable') {
+            from {
+                configurations.allJavaFXnatives.collect { it.isDirectory() ? it : zipTree(it) }
+            }
+            duplicatesStrategy 'exclude'
+        }
     }
 }
 
@@ -118,41 +149,23 @@ def createZipDistribution(distType) {
 
         into internalFolder
 
-        from (jar)
+        from (createJarFile(distType)) {
+            rename "(.+)-${osString}(.+)", '$1$2'
+        }
 
         if (osString == 'portable') {
-            //to be portable, external JavaFX SDK's lib directory path in the user's system
-            //must be manually set in the launcher scripts by the user before launch
-            //(i.e. the JAVAFX_SDK_LIB environment variable is left empty
-            //as-is in the launcher scripts during the 'portable' zip creation)
             from ('launcher') {
                 include '**/*'
             }
         }
         else if (osString == 'win') {
-            //Windows JavaFX native libraries are included in the 'lib' folder,
-            //set the JAVAFX_SDK_LIB environment variable to point there
             from ('launcher') {
                 include '*.bat'
-                filesMatching('squirrel-sql.bat') {
-                    filter { line ->
-                        line.replace('set JAVAFX_SDK_LIB=', 'set JAVAFX_SDK_LIB=lib')
-                    }
-                    filteringCharset = java.nio.charset.StandardCharsets.UTF_8
-                }
             }
         }
         else {
-            //Linux/Mac JavaFX native libraries are included in the 'lib' directory,
-            //set the JAVAFX_SDK_LIB environment variable to point there
             from ('launcher') {
                 include '*.sh'
-                filesMatching('squirrel-sql.sh') {
-                    filter { line ->
-                        line.replace('JAVAFX_SDK_LIB=', 'JAVAFX_SDK_LIB=lib')
-                    }
-                    filteringCharset = java.nio.charset.StandardCharsets.UTF_8
-                }
             }
         }
 
@@ -166,8 +179,8 @@ def createZipDistribution(distType) {
         }
 
         if (osString == 'portable') {
-            //exclude JavaFX native libraries, to be portable,
-            //from the 'lib' sub-folder
+            //exclude JavaFX native libraries, to be portable, from the 'lib' sub-folder
+            //(native libraries are already packaged in the squirrel-sql-fx.jar)
             from (coreLibClasspath) {
                 into 'lib'
             }
@@ -198,5 +211,5 @@ task runApp {
 }
 
 task buildAll {
-    dependsOn jar, createZipDistributions
+    dependsOn createZipDistributions
 }
